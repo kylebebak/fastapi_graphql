@@ -1,3 +1,7 @@
+[scripts]
+lint = "poetry run black . && poetry run mypy . && poetry run flake8 ."
+start = "poetry run uvicorn main:app --reload"
+
 [tool.poetry]
 name = "fastapi-test"
 version = "0.1.0"
