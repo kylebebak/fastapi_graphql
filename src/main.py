@@ -67,7 +67,7 @@ async def ws_bus(websocket: WebSocket):
     bus.add(websocket, 'main')
     while True:
         data = await websocket.receive_text()
-        bus.send(data, 'main')
+        await bus.send(data, 'main')
 
 
 # redis bus
