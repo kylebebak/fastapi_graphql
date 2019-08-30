@@ -5,12 +5,12 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from starlette.websockets import WebSocket
 
+from src.bus import Bus
+
 
 app = FastAPI()
-
-# improve: make this an instance of `Bus`, which manages the list/set of websockets for each channel
-# `add(ws: WebSocket, channel: str)`, `remove(ws: WebSocket, channel?: str)`, `send(text: str, channel: str)`
 websockets: List[WebSocket] = []
+bus = Bus()
 
 
 class Item(BaseModel):
@@ -34,6 +34,7 @@ def update_item(item_id: int, item: Item):
     return {"item_name": item.name, "item_id": item_id}
 
 
+# in-memory list
 @app.post("/ws/write")
 async def post_ws(item: Item):
     global websockets
@@ -53,6 +54,23 @@ async def ws(websocket: WebSocket):
             await ws.send_text(f"message text was: {data}")
 
 
+# in-memory bus
+@app.post("/ws/write_bus")
+async def post_ws_bus(item: Item):
+    await bus.send(item.json(), 'main')
+    return {"item": item}
+
+
+@app.websocket("/ws_bus")
+async def ws_bus(websocket: WebSocket):
+    await websocket.accept()
+    bus.add(websocket, 'main')
+    while True:
+        data = await websocket.receive_text()
+        bus.send(data, 'main')
+
+
+# redis bus
 @app.post("/ws/write_redis")
 async def post_ws_redis(item: Item):
     global websockets

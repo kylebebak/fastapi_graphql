@@ -32,6 +32,12 @@ poetry env use 3.7
 poetry install
 ```
 
+#### Run Dev Server
+
+```sh
+poetry run uvicorn src.main:app --reload
+```
+
 ### Enabling Editor Support
 
 For jedi, mypy, and flake8.
