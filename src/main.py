@@ -36,7 +36,7 @@ def update_item(item_id: int, item: Item):
     return {"item_name": item.name, "item_id": item_id}
 
 
-# in-memory list
+# in-memory
 @app.post("/ws/write")
 async def post_ws(item: Item):
     global websockets
@@ -72,7 +72,7 @@ async def ws_bus(websocket: WebSocket):
         await bus.send(data, CHANNEL)
 
 
-# redis bus
+# redis
 @app.post("/ws/write_redis")
 async def post_ws_redis(item: Item):
     redis = await get_redis()
@@ -82,12 +82,20 @@ async def post_ws_redis(item: Item):
 
 @app.websocket("/ws_redis")
 async def ws_redis(websocket: WebSocket):
+    """https://stackoverflow.com/questions/31623194/asyncio-two-loops-for-different-i-o-tasks
+    """
     await websocket.accept()
-    redis, subscriber = await get_subscriber(CHANNEL)
+    _, subscriber = await get_subscriber(CHANNEL)
+    redis = await get_redis()
 
-    # data = await websocket.receive_text()
-    # await redis.publish(CHANNEL, data)
+    async def receive():
+        while True:
+            data = await websocket.receive_text()
+            await redis.publish(CHANNEL, data)
 
-    while await subscriber.wait_message():
-        text = await subscriber.get(encoding="utf-8")
-        await websocket.send_text(text)
+    async def send():
+        while True:
+            text = await subscriber.get(encoding="utf-8")
+            await websocket.send_text(text)
+
+    await asyncio.gather(asyncio.create_task(receive()), asyncio.create_task(send()))
