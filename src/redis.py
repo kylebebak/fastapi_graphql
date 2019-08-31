@@ -12,3 +12,8 @@ async def get_subscriber(name: str) -> Tuple[Any, Any]:
     res = await redis.subscribe(name)
     subscriber = res[0]
     return redis, subscriber
+
+
+async def redis_send(ch: str, text: str) -> None:
+    redis = await get_redis()
+    await redis.publish(ch, text)
