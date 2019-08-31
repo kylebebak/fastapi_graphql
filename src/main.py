@@ -6,8 +6,10 @@ from pydantic import BaseModel
 from starlette.websockets import WebSocket
 
 from src.bus import Bus
+from src.redis import get_redis, get_subscriber
 
 
+CHANNEL = "main"
 app = FastAPI()
 websockets: List[WebSocket] = []
 bus = Bus()
@@ -57,34 +59,35 @@ async def ws(websocket: WebSocket):
 # in-memory bus
 @app.post("/ws/write_bus")
 async def post_ws_bus(item: Item):
-    await bus.send(item.json(), 'main')
+    await bus.send(item.json(), CHANNEL)
     return {"item": item}
 
 
 @app.websocket("/ws_bus")
 async def ws_bus(websocket: WebSocket):
     await websocket.accept()
-    bus.add(websocket, 'main')
+    bus.add(websocket, CHANNEL)
     while True:
         data = await websocket.receive_text()
-        await bus.send(data, 'main')
+        await bus.send(data, CHANNEL)
 
 
 # redis bus
 @app.post("/ws/write_redis")
 async def post_ws_redis(item: Item):
-    global websockets
-    for ws in websockets:
-        await ws.send_text(item.json())
+    redis = await get_redis()
+    await redis.publish(CHANNEL, item.json())
     return {"item": item}
 
 
 @app.websocket("/ws_redis")
 async def ws_redis(websocket: WebSocket):
     await websocket.accept()
-    global websockets
-    websockets.append(websocket)
-    while True:
-        data = await websocket.receive_text()
-        for ws in websockets:
-            await ws.send_text(f"message text was: {data}")
+    redis, subscriber = await get_subscriber(CHANNEL)
+
+    # data = await websocket.receive_text()
+    # await redis.publish(CHANNEL, data)
+
+    while await subscriber.wait_message():
+        text = await subscriber.get(encoding="utf-8")
+        await websocket.send_text(text)
