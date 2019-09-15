@@ -1,7 +1,9 @@
-from typing import Optional
+from typing import Optional, AsyncIterator
 import asyncio
+import random
 
 from fastapi import FastAPI
+from starlette.responses import StreamingResponse
 from pydantic import BaseModel
 from starlette.websockets import WebSocket, WebSocketDisconnect
 
@@ -48,3 +50,22 @@ async def ws_redis(ws: WebSocket):
         await asyncio.gather(asyncio.create_task(pub()), asyncio.create_task(sub()))
     except WebSocketDisconnect:
         print(f"{ws} disconnected")
+
+
+async def frames() -> AsyncIterator[bytes]:
+    i = 0
+    while True:
+        b = open(f'src/assets/{(i % 3) + 1}' + '.jpg', 'rb').read()
+        yield (
+            b"--frame\r\n"
+            b"Content-Type: image/jpeg\r\n\r\n" + b + b"\r\n"
+        )
+        await asyncio.sleep(0.2)
+        i += 1
+
+
+@app.get("/video")
+async def video():
+    return StreamingResponse(
+        frames(), headers={"Content-Type": "multipart/x-mixed-replace; boundary=frame"}
+    )
