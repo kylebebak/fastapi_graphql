@@ -1,17 +1,20 @@
 from typing import Optional, AsyncIterator
 import asyncio
-import random
 
 from fastapi import FastAPI
 from starlette.responses import StreamingResponse
+from starlette.graphql import GraphQLApp
+import graphene  # type: ignore
 from pydantic import BaseModel
 from starlette.websockets import WebSocket, WebSocketDisconnect
 
 from src.redis import get_redis, get_subscriber
+from src import gql
 
 
 CHANNEL = "main"
 app = FastAPI()
+app.add_route("/graphql", GraphQLApp(schema=graphene.Schema(query=gql.Query)))
 
 
 class Item(BaseModel):
