@@ -2,9 +2,12 @@ from typing import Optional, AsyncIterator
 import asyncio
 
 from fastapi import FastAPI
-from starlette.responses import StreamingResponse
+from starlette.responses import StreamingResponse, Response
+from starlette.requests import Request
 from starlette.graphql import GraphQLApp
+import httpx
 import graphene  # type: ignore
+from graphql.execution.executors.asyncio import AsyncioExecutor  # type: ignore
 from pydantic import BaseModel
 from starlette.websockets import WebSocket, WebSocketDisconnect
 
@@ -14,7 +17,7 @@ from src import gql
 
 CHANNEL = "main"
 app = FastAPI()
-app.add_route("/graphql", GraphQLApp(schema=graphene.Schema(query=gql.Query)))
+app.add_route("/graphql", GraphQLApp(schema=graphene.Schema(query=gql.Query), executor_class=AsyncioExecutor))
 
 
 class Item(BaseModel):
@@ -22,6 +25,15 @@ class Item(BaseModel):
     price: float
     is_offer: Optional[bool] = None
 
+
+@app.middleware("http")
+async def add_process_time_header(request: Request, call_next):
+    client = httpx.AsyncClient()
+    if '/proxy/' in request.url.path:
+        res = await client.get(f'https://httpbin.org/get?proxy={request.url.path}')
+        return Response(res.content, status_code=res.status_code)
+    else:
+        return await call_next(request)
 
 # redis
 @app.post("/ws/write_redis")

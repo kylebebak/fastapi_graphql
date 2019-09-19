@@ -1,8 +1,12 @@
-import graphene  # type: ignore
+from graphene import ObjectType, String
 
 
-class Query(graphene.ObjectType):
-    hello = graphene.String(name=graphene.String(default_value="stranger"))
+class Query(ObjectType):
+    hello = String(name=String(default_value="stranger"))
+    goodbye = String()
 
-    def resolve_hello(self, info, name):
+    async def resolve_hello(self, info, name):
         return "Hello " + name
+
+    async def resolve_goodbye(root, info):
+        return "See ya!"
