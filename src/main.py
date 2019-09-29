@@ -1,5 +1,6 @@
 from typing import Optional, AsyncIterator
 import asyncio
+import base64
 
 from fastapi import FastAPI
 from starlette.responses import StreamingResponse, Response
@@ -17,7 +18,10 @@ from src import gql
 
 CHANNEL = "main"
 app = FastAPI()
-app.add_route("/graphql", GraphQLApp(schema=graphene.Schema(query=gql.Query), executor_class=AsyncioExecutor))
+app.add_route(
+    "/graphql",
+    GraphQLApp(schema=graphene.Schema(query=gql.Query), executor_class=AsyncioExecutor),
+)
 
 
 class Item(BaseModel):
@@ -26,14 +30,22 @@ class Item(BaseModel):
     is_offer: Optional[bool] = None
 
 
+def httpx_to_starlette_response(res: httpx.AsyncResponse) -> Response:
+    headers = dict(res.headers)
+    headers.pop("content-length", None)
+    headers.pop("content-encoding", None)
+    return Response(res.content, status_code=res.status_code, headers=headers)
+
+
 @app.middleware("http")
-async def add_process_time_header(request: Request, call_next):
+async def proxy_to_httpbin(request: Request, call_next):
     client = httpx.AsyncClient()
-    if '/proxy/' in request.url.path:
-        res = await client.get(f'https://httpbin.org/get?proxy={request.url.path}')
-        return Response(res.content, status_code=res.status_code)
+    if "/proxy/" in request.url.path:
+        res = await client.get(f"https://httpbin.org/get?proxy={request.url.path}")
+        return httpx_to_starlette_response(res)
     else:
         return await call_next(request)
+
 
 # redis
 @app.post("/ws/write_redis")
@@ -65,18 +77,39 @@ async def ws_redis(ws: WebSocket):
         await asyncio.gather(asyncio.create_task(pub()), asyncio.create_task(sub()))
     except WebSocketDisconnect:
         print(f"{ws} disconnected")
+    except Exception as e:
+        print(e)
+        return
+
+
+async def ws_frames() -> AsyncIterator[bytes]:
+    i = 0
+    while True:
+        b = open(f"src/assets/{(i % 3) + 1}" + ".jpg", "rb").read()
+        yield base64.b64encode(b)
+        await asyncio.sleep(0.2)
+        i += 1
+        print(f"yielded frame {i}")
 
 
 async def frames() -> AsyncIterator[bytes]:
-    i = 0
-    while True:
-        b = open(f'src/assets/{(i % 3) + 1}' + '.jpg', 'rb').read()
+    for i in range(30):
+        b = open(f"src/assets/{(i % 3) + 1}" + ".jpg", "rb").read()
         yield (
             b"--frame\r\n"
             b"Content-Type: image/jpeg\r\n\r\n" + b + b"\r\n"
         )
         await asyncio.sleep(0.2)
         i += 1
+        print(f"yielded frame {i}")
+
+
+@app.websocket("/ws_video")
+async def ws_video(ws: WebSocket):
+    await ws.accept()
+
+    async for frame in ws_frames():
+        await ws.send_text(frame.decode("utf-8"))
 
 
 @app.get("/video")
