@@ -1,4 +1,4 @@
-from typing import Optional, AsyncIterator
+from typing import Optional, List, AsyncIterator
 import asyncio
 import base64
 
@@ -12,7 +12,8 @@ from graphql.execution.executors.asyncio import AsyncioExecutor  # type: ignore
 from pydantic import BaseModel
 from starlette.websockets import WebSocket, WebSocketDisconnect
 
-from src.redis import get_redis, get_subscriber
+from src.redis_app import get_redis, get_subscriber
+from src.models import db, Users, Addresses
 from src import gql
 
 
@@ -28,6 +29,17 @@ class Item(BaseModel):
     name: str
     price: float
     is_offer: Optional[bool] = None
+
+
+class UserIn(BaseModel):
+    name: str
+    age: int
+
+
+class User(BaseModel):
+    id: int
+    name: str
+    age: int
 
 
 def httpx_to_starlette_response(res: httpx.AsyncResponse) -> Response:
@@ -117,3 +129,25 @@ async def video():
     return StreamingResponse(
         frames(), headers={"Content-Type": "multipart/x-mixed-replace; boundary=frame"}
     )
+
+
+@app.on_event("startup")
+async def startup():
+    await db.set_bind("postgresql://localhost/postgres")
+
+
+@app.on_event("shutdown")
+async def shutdown():
+    await db.pop_bind().close()
+
+
+@app.get("/users", response_model=List[User])
+async def read_users():
+    users = await Users.query.gino.all()
+    return [user.__values__ for user in users]
+
+
+@app.post("/users", response_model=User)
+async def create_note(user: UserIn):
+    user = await Users.create(name=user.name, age=user.age)
+    return {**user.__values__}

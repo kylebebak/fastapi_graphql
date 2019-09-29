@@ -1,4 +1,4 @@
-from graphene import ObjectType, String
+from graphene import ObjectType, String  # type: ignore
 
 
 class Query(ObjectType):

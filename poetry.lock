@@ -1,5 +1,13 @@
 [[package]]
 category = "main"
+description = "Asyncio support for PEP-567 contextvars backport."
+name = "aiocontextvars"
+optional = false
+python-versions = ">=3.5"
+version = "0.2.2"
+
+[[package]]
+category = "main"
 description = "asyncio (PEP 3156) Redis support"
 name = "aioredis"
 optional = false
@@ -42,6 +50,19 @@ name = "async-timeout"
 optional = false
 python-versions = ">=3.5.3"
 version = "3.0.1"
+
+[[package]]
+category = "main"
+description = "An asyncio PosgtreSQL driver"
+name = "asyncpg"
+optional = false
+python-versions = ">=3.5.0"
+version = "0.18.3"
+
+[package.extras]
+dev = ["Cython (0.29)", "pytest (>=3.6.0)", "Sphinx (>=1.7.0,<1.8.0)", "sphinxcontrib-asyncio (>=0.2.0,<0.3.0)", "sphinx-rtd-theme (>=0.2.0,<0.3.0)", "flake8 (>=3.5.0,<3.6.0)", "uvloop (>=0.8.0)"]
+docs = ["Sphinx (>=1.7.0,<1.8.0)", "sphinxcontrib-asyncio (>=0.2.0,<0.3.0)", "sphinx-rtd-theme (>=0.2.0,<0.3.0)"]
+test = ["flake8 (>=3.5.0,<3.6.0)", "uvloop (>=0.8.0)"]
 
 [[package]]
 category = "dev"
@@ -161,6 +182,19 @@ entrypoints = ">=0.3.0,<0.4.0"
 mccabe = ">=0.6.0,<0.7.0"
 pycodestyle = ">=2.5.0,<2.6.0"
 pyflakes = ">=2.1.0,<2.2.0"
+
+[[package]]
+category = "main"
+description = "GINO Is Not ORM - a Python asyncio ORM on SQLAlchemy core."
+name = "gino"
+optional = false
+python-versions = ">=3.5"
+version = "0.8.3"
+
+[package.dependencies]
+SQLAlchemy = ">=1.2,<2.0"
+aiocontextvars = ">=0.2,<1.0"
+asyncpg = ">=0.18,<1.0"
 
 [[package]]
 category = "main"
@@ -636,15 +670,17 @@ python-versions = ">=3.6"
 version = "8.0.2"
 
 [metadata]
-content-hash = "ecbd02d1c2915cd5aed487f311896d24bc24a646df711a0f81c3226b8aa21142"
+content-hash = "4c9a4c4e3bebbc2e2f8cc2c54ece3fd0c2b5cd839f04802f4912a1904801c224"
 python-versions = "^3.7"
 
 [metadata.hashes]
+aiocontextvars = ["885daf8261818767d8f7cbd79f9d4482d118f024b6586ef6e67980236a27bfa3", "f027372dc48641f683c559f247bd84962becaacdc9ba711d583c3871fb5652aa"]
 aioredis = ["71302cebeb7add86f1fe660b469068760ca4364504e75ee83dd6f6b7118bfe28", "86da2748fb0652625a8346f413167f078ec72bdc76e217db7e605a059cd56e86"]
 aniso8601 = ["513d2b6637b7853806ae79ffaca6f3e8754bdd547048f5ccc1420aec4b714f1e", "d10a4bf949f619f719b227ef5386e31f49a2b6d453004b21f02661ccc8670c7b"]
 appdirs = ["9e5896d1372858f8dd3344faf4e5014d21849c756c8d5701f78f8a103b372d92", "d8b24664561d0d34ddfaec54636d502d7cea6e29c3eaf68f3df6180863e2166e"]
 appnope = ["5b26757dc6f79a3b7dc9fab95359328d5747fcb2409d331ea66d0272b90ab2a0", "8b995ffe925347a2138d7ac0fe77155e4311a0ea6d6da4f5128fe4b3cbe5ed71"]
 async-timeout = ["0c3c816a028d47f659d6ff5c745cb2acf1f966da1fe5c19c77a70282b25f4c5f", "4291ca197d287d274d0b6cb5d6f8f8f82d434ed288f962539ff18cc9012f9ea3"]
+asyncpg = ["0677714b26b48d63db728867b812ef365ec3879d2be6fa1c9cf4328503f9a464", "2dee4fb251139f1c1ee4bd9959d516f930f4da37a2f33b07c2b902b837a76666", "378a7ef11ce7b35f11eb816e5252bc1e779119f7583a872233b45a76effac02e", "4539bc2e63600a1ee999086bbb59bf717ab32ea771ac20b5b792a2234633b5fb", "4a779a85302241782bed8ed0f2bcb38544805b3e107b16ee7489c5818d8f4228", "51a3d67a3fa43112b17ec510338723932e1e0611ad99a146acc9960d32210196", "58a5eccaac60fd326e32683226efe1046bfea558fa043360bdd1708e0e812c67", "814343dc2baa489a11521ff9fad68f337a05c9ae0461fdf9f1ec7ac3541c13a9", "84084f7dfed0b2d397a0c2fd7eaf29b01904c74f4320e5fe95ad3042042cf188", "89e727fdba05d90a0156d9d18932fd44a2baa84e90e3368573f432a308ad8fd7", "ab8b9d367e3ef48f35a059642940714a2bda7a7fce8b017b21bfbc4f8fbf8f5f", "c1fe1f0ef848f0f17bf63b90a4c3f446a14e4c899d8531ea988109cc0de014e5", "cc7aa61bf41273ee5d4c11e0e72c0d9340e9c4dbf752464ae2b6816abadaabce", "d5450bdf8631fa1200c08a2e70cab06c2e8c09ef608629908531513444d12858", "fd2d13da29f55c2c71b1acc9d9f107c7a5176fffb3f62ff503f2b300f7ecd74e", "fd35a8082b97d5b97d26bcd1b010fdd65a56311d7a02bf2a7e2c56810b9961a7"]
 attrs = ["69c0dbf2ed392de1cb5ec704444b08a5ef81680a61cb899dc08127123af36a79", "f0b870f674851ecbfbbbd364d6b5cbdff9dcedbc7f3f5e18a6891057f21fe399"]
 backcall = ["38ecd85be2c1e78f77fd91700c76e14667dc21e2713b63876c0eb901196e01e4", "bbbf4b1e5cd2bdb08f915895b51081c041bac22394fdfcfdfbe9f14b77c08bf2"]
 black = ["817243426042db1d36617910df579a54f1afd659adb96fc5032fcf4b36209739", "e030a9a28f542debc08acceb273f228ac422798e5215ba2a791a6ddeaaca22a5"]
@@ -656,6 +692,7 @@ decorator = ["86156361c50488b84a3f148056ea716ca587df2f0de1d34750d35c21312725de",
 entrypoints = ["589f874b313739ad35be6e0cd7efde2a4e9b6fea91edcc34e58ecbb8dbe56d19", "c70dd71abe5a8c85e55e12c19bd91ccfeec11a6e99044204511f9ed547d48451"]
 fastapi = ["273d099b7a8dd7cb1de166ea38216528406fbe042fb604d0025c00810e5ea858", "35c85f39f235da652f24eeb9378a90d479ed087fa9ae5798bac9dce2257b6115"]
 flake8 = ["19241c1cbc971b9962473e4438a2ca19749a7dd002dd1a946eaba171b4114548", "8e9dfa3cecb2400b3738a42c54c3043e821682b9c840b0448c0503f781130696"]
+gino = ["187492619c347df41fdbc876b058b85e77f7c50739d552ad720ff439d3d83753", "3aebbe8776efefa49b878f00b48d6ad483b0f4ebcd8630641ea7c3c9f63bb260"]
 graphene = ["09165f03e1591b76bf57b133482db9be6dac72c74b0a628d3c93182af9c5a896", "2cbe6d4ef15cfc7b7805e0760a0e5b80747161ce1b0f990dfdc0d2cf497c12f9"]
 graphql-core = ["1488f2a5c2272dc9ba66e3042a6d1c30cea0db4c80bd1e911c6791ad6187d91b", "da64c472d720da4537a2e8de8ba859210b62841bd47a9be65ca35177f62fe0e4"]
 graphql-relay = ["0e94201af4089e1f81f07d7bd8f84799768e39d70fa1ea16d1df505b46cc6335", "75aa0758971e252964cb94068a4decd472d2a8295229f02189e3cbca1f10dbb5", "7fa74661246e826ef939ee92e768f698df167a7617361ab399901eaebf80dce6"]
