@@ -38,10 +38,10 @@ async def shutdown():
     await db.pop_bind().close()
 
 
-app.add_route(
-    "/graphql",
-    GraphQLApp(schema=graphene.Schema(query=gql.Query), executor_class=AsyncioExecutor),
+graphql_app = GraphQLApp(
+    schema=graphene.Schema(query=gql.Query), executor_class=AsyncioExecutor
 )
+app.add_route("/graphql", graphql_app)
 
 
 @app.middleware("http")
@@ -102,10 +102,7 @@ async def ws_frames() -> AsyncIterator[bytes]:
 async def frames() -> AsyncIterator[bytes]:
     for i in range(30):
         b = open(f"src/assets/{(i % 3) + 1}" + ".jpg", "rb").read()
-        yield (
-            b"--frame\r\n"
-            b"Content-Type: image/jpeg\r\n\r\n" + b + b"\r\n"
-        )
+        yield (b"--frame\r\n" b"Content-Type: image/jpeg\r\n\r\n" + b + b"\r\n")
         await asyncio.sleep(0.2)
         i += 1
         print(f"yielded frame {i}")
@@ -140,11 +137,15 @@ async def create_user(user: models.UserIn):
 
 @app.post("/addresses")
 async def create_address(address: models.AddressIn):
-    obj = await Address.create(user_id=address.user_id, email_address=address.email_address)
+    obj = await Address.create(
+        user_id=address.user_id, email_address=address.email_address
+    )
     return {**obj.__values__}
 
 
 @app.post("/address_details")
 async def create_address_details(details: models.AddressDetailsIn):
-    obj = await AddressDetails.create(address_id=details.address_id, details=details.details)
+    obj = await AddressDetails.create(
+        address_id=details.address_id, details=details.details
+    )
     return {**obj.__values__}

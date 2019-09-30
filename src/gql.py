@@ -1,10 +1,16 @@
 from typing import Dict, List
 from collections import defaultdict
 
+from memoization import cached  # type: ignore
 import graphene  # type: ignore
 from aiodataloader import DataLoader  # type: ignore
 
 from src.db import User, Address, AddressDetails
+
+
+@cached
+def get_loader(context, Loader):
+    return Loader()
 
 
 class AddressesByUserIdLoader(DataLoader):
@@ -27,10 +33,6 @@ class DetailsByAddressIdLoader(DataLoader):
         return [details_by_address_id.get(aid, []) for aid in ids]
 
 
-a_loader = AddressesByUserIdLoader()
-d_loader = DetailsByAddressIdLoader()
-
-
 class AddressDetailsType(graphene.ObjectType):
     id = graphene.Int()
     address_id = graphene.Int()
@@ -44,7 +46,8 @@ class AddressType(graphene.ObjectType):
     details = graphene.List(AddressDetailsType)
 
     async def resolve_details(self, info):
-        return await d_loader.load(self.id)
+        loader = get_loader(info.context, DetailsByAddressIdLoader)
+        return await loader.load(self.id)
 
 
 class UserType(graphene.ObjectType):
@@ -54,7 +57,8 @@ class UserType(graphene.ObjectType):
     addresses = graphene.List(AddressType)
 
     async def resolve_addresses(self, info):
-        return await a_loader.load(self.id)
+        loader = get_loader(info.context, AddressesByUserIdLoader)
+        return await loader.load(self.id)
 
 
 class Query(graphene.ObjectType):
