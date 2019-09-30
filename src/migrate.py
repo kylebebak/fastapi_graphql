@@ -1,6 +1,6 @@
 import asyncio
 
-from src.models import db
+from src.db import db
 
 
 async def main():
