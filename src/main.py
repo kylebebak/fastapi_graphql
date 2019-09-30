@@ -13,7 +13,7 @@ from pydantic import BaseModel
 from starlette.websockets import WebSocket, WebSocketDisconnect
 
 from src.redis_app import get_redis, get_subscriber
-from src.models import db, Users, Addresses
+from src.models import db, User, Address, AddressDetails
 from src import gql
 
 
@@ -25,21 +25,25 @@ app.add_route(
 )
 
 
-class Item(BaseModel):
-    name: str
-    price: float
-    is_offer: Optional[bool] = None
-
-
-class UserIn(BaseModel):
-    name: str
-    age: int
-
-
-class User(BaseModel):
+class UserModel(BaseModel):
     id: int
     name: str
     age: int
+
+
+class UserInModel(BaseModel):
+    name: str
+    age: int
+
+
+class AddressInModel(BaseModel):
+    user_id: int
+    email_address: str
+
+
+class AddressDetailsInModel(BaseModel):
+    address_id: int
+    details: str
 
 
 def httpx_to_starlette_response(res: httpx.AsyncResponse) -> Response:
@@ -47,6 +51,16 @@ def httpx_to_starlette_response(res: httpx.AsyncResponse) -> Response:
     headers.pop("content-length", None)
     headers.pop("content-encoding", None)
     return Response(res.content, status_code=res.status_code, headers=headers)
+
+
+@app.on_event("startup")
+async def startup():
+    await db.set_bind("postgresql://localhost/postgres")
+
+
+@app.on_event("shutdown")
+async def shutdown():
+    await db.pop_bind().close()
 
 
 @app.middleware("http")
@@ -61,10 +75,10 @@ async def proxy_to_httpbin(request: Request, call_next):
 
 # redis
 @app.post("/ws/write_redis")
-async def post_ws_redis(item: Item):
+async def post_ws_redis(user: UserModel):
     redis = await get_redis()
-    await redis.publish(CHANNEL, item.json())
-    return {"item": item}
+    await redis.publish(CHANNEL, user.json())
+    return {"user": user}
 
 
 @app.websocket("/ws_redis")
@@ -131,23 +145,25 @@ async def video():
     )
 
 
-@app.on_event("startup")
-async def startup():
-    await db.set_bind("postgresql://localhost/postgres")
-
-
-@app.on_event("shutdown")
-async def shutdown():
-    await db.pop_bind().close()
-
-
-@app.get("/users", response_model=List[User])
+@app.get("/users", response_model=List[UserModel])
 async def read_users():
-    users = await Users.query.gino.all()
-    return [user.__values__ for user in users]
+    objs = await User.query.gino.all()
+    return [obj.__values__ for obj in objs]
 
 
-@app.post("/users", response_model=User)
-async def create_note(user: UserIn):
-    user = await Users.create(name=user.name, age=user.age)
-    return {**user.__values__}
+@app.post("/users", response_model=UserModel)
+async def create_user(user: UserInModel):
+    obj = await User.create(name=user.name, age=user.age)
+    return {**obj.__values__}
+
+
+@app.post("/addresses")
+async def create_address(address: AddressInModel):
+    obj = await Address.create(user_id=address.user_id, email_address=address.email_address)
+    return {**obj.__values__}
+
+
+@app.post("/address_details")
+async def create_address_details(details: AddressDetailsInModel):
+    obj = await AddressDetails.create(address_id=details.address_id, details=details.details)
+    return {**obj.__values__}
