@@ -5,7 +5,7 @@ from memoization import cached  # type: ignore
 import graphene  # type: ignore
 from aiodataloader import DataLoader  # type: ignore
 
-from src.db import User, Address, AddressDetails
+from src.db import User, Address, Details
 
 
 @cached
@@ -24,10 +24,10 @@ class AddressesByUserIdLoader(DataLoader):
 
 
 class DetailsByAddressIdLoader(DataLoader):
-    async def batch_load_fn(self, ids) -> List[List[AddressDetails]]:
-        details_by_address_id: Dict[int, List[AddressDetails]] = defaultdict(list)
+    async def batch_load_fn(self, ids) -> List[List[Details]]:
+        details_by_address_id: Dict[int, List[Details]] = defaultdict(list)
 
-        for details in await AddressDetails.query.where(AddressDetails.address_id.in_(ids)).gino.all():
+        for details in await Details.query.where(Details.address_id.in_(ids)).gino.all():
             details_by_address_id[details.address_id].append(details)
 
         return [details_by_address_id.get(aid, []) for aid in ids]

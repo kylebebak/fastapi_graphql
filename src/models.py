@@ -5,11 +5,13 @@ class User(BaseModel):
     id: int
     name: str
     age: int
+    group_id: int
 
 
 class UserIn(BaseModel):
     name: str
     age: int
+    group_id: int
 
 
 class AddressIn(BaseModel):
@@ -20,3 +22,7 @@ class AddressIn(BaseModel):
 class AddressDetailsIn(BaseModel):
     address_id: int
     details: str
+
+
+class GroupIn(BaseModel):
+    name: str

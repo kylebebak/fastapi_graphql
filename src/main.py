@@ -12,7 +12,7 @@ from graphql.execution.executors.asyncio import AsyncioExecutor  # type: ignore
 from starlette.websockets import WebSocket, WebSocketDisconnect
 
 from src.redis_app import get_redis, get_subscriber
-from src.db import db, User, Address, AddressDetails
+from src.db import db, User, Address, Details, Group
 from src import models
 from src import gql
 
@@ -131,7 +131,7 @@ async def read_users():
 
 @app.post("/users", response_model=models.User)
 async def create_user(user: models.UserIn):
-    obj = await User.create(name=user.name, age=user.age)
+    obj = await User.create(name=user.name, age=user.age, group_id=user.group_id)
     return {**obj.__values__}
 
 
@@ -143,9 +143,15 @@ async def create_address(address: models.AddressIn):
     return {**obj.__values__}
 
 
-@app.post("/address_details")
-async def create_address_details(details: models.AddressDetailsIn):
-    obj = await AddressDetails.create(
+@app.post("/details")
+async def create_details(details: models.AddressDetailsIn):
+    obj = await Details.create(
         address_id=details.address_id, details=details.details
     )
+    return {**obj.__values__}
+
+
+@app.post("/groups")
+async def create_group(group: models.GroupIn):
+    obj = await Group.create(name=group.name)
     return {**obj.__values__}

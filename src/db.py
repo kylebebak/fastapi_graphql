@@ -6,10 +6,18 @@ db = Gino()
 Model: Any = db.Model
 
 
+class Group(Model):
+    __tablename__ = "groups"
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String, nullable=False)
+
+
 class User(Model):
     __tablename__ = "users"
 
     id = db.Column(db.Integer, primary_key=True)
+    group_id = db.Column(None, db.ForeignKey("groups.id"))
     name = db.Column(db.String)
     age = db.Column(db.Integer)
 
@@ -22,8 +30,8 @@ class Address(Model):
     email_address = db.Column(db.String, nullable=False)
 
 
-class AddressDetails(Model):
-    __tablename__ = "address_details"
+class Details(Model):
+    __tablename__ = "details"
 
     id = db.Column(db.Integer, primary_key=True)
     address_id = db.Column(None, db.ForeignKey("addresses.id"))
