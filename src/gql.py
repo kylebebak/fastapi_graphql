@@ -44,19 +44,19 @@ class GroupLoader(DataLoader):
 
 
 class AddressDetailsType(graphene.ObjectType):
-    id = graphene.Int()
-    address_id = graphene.Int()
+    id = graphene.String()
+    address_id = graphene.String()
     details = graphene.String()
 
 
 class GroupType(graphene.ObjectType):
-    id = graphene.Int()
+    id = graphene.String()
     name = graphene.String()
 
 
 class AddressType(graphene.ObjectType):
-    id = graphene.Int()
-    user_id = graphene.Int()
+    id = graphene.String()
+    user_id = graphene.String()
     email_address = graphene.String()
     details = graphene.List(AddressDetailsType)
 
@@ -66,10 +66,10 @@ class AddressType(graphene.ObjectType):
 
 
 class UserType(graphene.ObjectType):
-    id = graphene.Int()
+    id = graphene.String()
     name = graphene.String()
     age = graphene.Int()
-    group_id = graphene.Int()
+    group_id = graphene.String()
     addresses = graphene.List(AddressType)
     group = graphene.Field(GroupType)
 
@@ -84,11 +84,16 @@ class UserType(graphene.ObjectType):
 
 class Query(graphene.ObjectType):
     hello = graphene.String(name=graphene.String(default_value="stranger"))
-    users = graphene.List(lambda: UserType)
+    users = graphene.List(UserType)
+    addresses = graphene.List(AddressType)
 
     async def resolve_hello(self, info, name):
         return "Hello " + name
 
     async def resolve_users(self, info):
         objs = await User.query.gino.all()
+        return objs
+
+    async def resolve_addresses(self, info):
+        objs = await Address.query.gino.all()
         return objs

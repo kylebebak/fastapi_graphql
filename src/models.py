@@ -1,26 +1,33 @@
+from uuid import UUID
+
 from pydantic import BaseModel
 
 
 class User(BaseModel):
-    id: int
+    id: UUID
     name: str
     age: int
-    group_id: int
+    group_id: UUID
 
 
 class UserIn(BaseModel):
     name: str
     age: int
-    group_id: int
+    group_id: UUID
+
+
+class UserUpdate(BaseModel):
+    name: str
+    age: int
 
 
 class AddressIn(BaseModel):
-    user_id: int
+    user_id: UUID
     email_address: str
 
 
 class AddressDetailsIn(BaseModel):
-    address_id: int
+    address_id: UUID
     details: str
 
 

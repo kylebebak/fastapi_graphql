@@ -135,6 +135,13 @@ async def create_user(user: models.UserIn):
     return {**obj.__values__}
 
 
+@app.put("/users/{user_id}", response_model=models.User)
+async def update_user(user_id: str, user: models.UserUpdate):
+    obj = await User.get(user_id)
+    await obj.update(**user.__values__).apply()
+    return {**obj.__values__}
+
+
 @app.post("/addresses")
 async def create_address(address: models.AddressIn):
     obj = await Address.create(
