@@ -1,11 +1,13 @@
 from typing import Dict, List
 from collections import defaultdict
+from uuid import UUID
 
 from memoization import cached  # type: ignore
 import graphene  # type: ignore
 from aiodataloader import DataLoader  # type: ignore
 
 from src.db import User, Address, Details, Group
+from src import models
 
 
 @cached
@@ -14,9 +16,10 @@ def get_loader(context, Loader):
 
 
 class AddressesByUserIdLoader(DataLoader):
-    async def batch_load_fn(self, ids: List[int]) -> List[List[Address]]:
-        adresses_by_user_id: Dict[int, List[Address]] = defaultdict(list)
+    async def batch_load_fn(self, ids: List[UUID]) -> List[List[Address]]:
+        adresses_by_user_id: Dict[UUID, List[Address]] = defaultdict(list)
 
+        address: models.AddressDb
         for address in await Address.query.where(Address.user_id.in_(ids)).gino.all():
             adresses_by_user_id[address.user_id].append(address)
 
@@ -24,9 +27,10 @@ class AddressesByUserIdLoader(DataLoader):
 
 
 class DetailsByAddressIdLoader(DataLoader):
-    async def batch_load_fn(self, ids: List[int]) -> List[List[Details]]:
-        details_by_address_id: Dict[int, List[Details]] = defaultdict(list)
+    async def batch_load_fn(self, ids: List[UUID]) -> List[List[Details]]:
+        details_by_address_id: Dict[UUID, List[Details]] = defaultdict(list)
 
+        details: models.DetailsDb
         for details in await Details.query.where(Details.address_id.in_(ids)).gino.all():
             details_by_address_id[details.address_id].append(details)
 
@@ -34,31 +38,32 @@ class DetailsByAddressIdLoader(DataLoader):
 
 
 class GroupLoader(DataLoader):
-    async def batch_load_fn(self, group_ids: List[int]) -> List[Group]:
-        group_by_id: Dict[int, Group] = {}
+    async def batch_load_fn(self, group_ids: List[UUID]) -> List[Group]:
+        group_by_id: Dict[UUID, Group] = {}
 
+        group: models.GroupDb
         for group in await Group.query.where(Group.id.in_(group_ids)).gino.all():
             group_by_id[group.id] = group
 
         return [group_by_id[group_id] for group_id in group_ids]
 
 
-class AddressDetailsType(graphene.ObjectType):
-    id = graphene.String()
-    address_id = graphene.String()
+class DetailsType(graphene.ObjectType):
+    id = graphene.UUID()
+    address_id = graphene.UUID()
     details = graphene.String()
 
 
 class GroupType(graphene.ObjectType):
-    id = graphene.String()
+    id = graphene.UUID()
     name = graphene.String()
 
 
 class AddressType(graphene.ObjectType):
-    id = graphene.String()
-    user_id = graphene.String()
+    id = graphene.UUID()
+    user_id = graphene.UUID()
     email_address = graphene.String()
-    details = graphene.List(AddressDetailsType)
+    details = graphene.List(DetailsType)
 
     async def resolve_details(self, info):
         loader = get_loader(info.context, DetailsByAddressIdLoader)
@@ -66,10 +71,10 @@ class AddressType(graphene.ObjectType):
 
 
 class UserType(graphene.ObjectType):
-    id = graphene.String()
+    id = graphene.UUID()
     name = graphene.String()
     age = graphene.Int()
-    group_id = graphene.String()
+    group_id = graphene.UUID()
     addresses = graphene.List(AddressType)
     group = graphene.Field(GroupType)
 

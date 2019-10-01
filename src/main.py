@@ -151,7 +151,7 @@ async def create_address(address: models.AddressIn):
 
 
 @app.post("/details")
-async def create_details(details: models.AddressDetailsIn):
+async def create_details(details: models.DetailsIn):
     obj = await Details.create(
         address_id=details.address_id, details=details.details
     )
