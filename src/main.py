@@ -28,14 +28,14 @@ def httpx_to_starlette_response(res: httpx.AsyncResponse) -> Response:
 CHANNEL = "main"
 app = FastAPI()
 
-origins = ["http:localhost", "http:localhost:3000"]
+cors_origins = ["http://localhost", "http://localhost:3000", "http://localhost:3001"]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    allow_origins=cors_origins,  # ["*"] for all origins
 )
 
 
