@@ -10,6 +10,7 @@ import httpx
 import graphene  # type: ignore
 from graphql.execution.executors.asyncio import AsyncioExecutor  # type: ignore
 from starlette.websockets import WebSocket, WebSocketDisconnect
+from starlette.middleware.cors import CORSMiddleware
 
 from src.redis_app import get_redis, get_subscriber
 from src.db import db, User, Address, Details, Group
@@ -26,6 +27,16 @@ def httpx_to_starlette_response(res: httpx.AsyncResponse) -> Response:
 
 CHANNEL = "main"
 app = FastAPI()
+
+origins = ["http:localhost", "http:localhost:3000"]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.on_event("startup")
@@ -152,9 +163,7 @@ async def create_address(address: models.AddressIn):
 
 @app.post("/details")
 async def create_details(details: models.DetailsIn):
-    obj = await Details.create(
-        address_id=details.address_id, details=details.details
-    )
+    obj = await Details.create(address_id=details.address_id, details=details.details)
     return {**obj.__values__}
 
 

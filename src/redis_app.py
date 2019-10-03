@@ -1,6 +1,6 @@
 # first run `redis-server /usr/local/etc/redis.conf`
 from typing import Tuple, Any
-import aioredis
+import aioredis  # type: ignore
 
 
 async def get_redis() -> Any:

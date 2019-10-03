@@ -6,7 +6,7 @@ from pydantic import BaseModel
 from starlette.websockets import WebSocket
 
 from src.bus import Bus
-from src.redis import get_subscriber, redis_send
+from src.redis_app import get_subscriber, redis_send
 
 
 CHANNEL = "main"

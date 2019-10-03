@@ -3,8 +3,6 @@ from datetime import datetime
 
 from pydantic import BaseModel
 
-from src import db
-
 
 class Model(BaseModel):
     id: UUID
@@ -18,17 +16,9 @@ class User(Model):
     group_id: UUID
 
 
-class UserDb(User, db.User):
-    pass
-
-
 class Address(Model):
     user_id: UUID
     email_address: str
-
-
-class AddressDb(Address, db.Address):
-    pass
 
 
 class Details(Model):
@@ -36,16 +26,8 @@ class Details(Model):
     details: str
 
 
-class DetailsDb(Details, db.Details):
-    pass
-
-
 class Group(Model):
     name: str
-
-
-class GroupDb(Group, db.Group):
-    pass
 
 
 class UserIn(BaseModel):
